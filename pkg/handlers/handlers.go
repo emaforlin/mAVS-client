@@ -19,7 +19,7 @@ import (
 var mutex = &sync.Mutex{}
 
 func HandleStream(s net.Stream) {
-	log.Println("New stream incoming!")
+	log.Println("Got a new stream!")
 
 	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
 
@@ -38,13 +38,13 @@ func ReadData(rw *bufio.ReadWriter) {
 		}
 		if str != "\n" {
 			var bc = blockchain.CreateBlockchain(blockchain.Difficulty)
-			if err := json.Unmarshal([]byte(str), bc); err != nil {
+			bc.Difficulty = blockchain.Difficulty
+			if err := json.Unmarshal([]byte(str), &bc); err != nil {
 				log.Fatal(err)
 			}
 			mutex.Lock()
-			if len(bc.Chain) > len(blockchain.BLOCKCHAIN.Chain) && bc.IsValid() {
-				blockchain.BLOCKCHAIN = *bc
-
+			if len(bc.Chain) > len(blockchain.BLOCKCHAIN.Chain) /*&& bc.IsValid()*/ {
+				*blockchain.BLOCKCHAIN = *bc
 				bytes, err := json.MarshalIndent(blockchain.BLOCKCHAIN, "", "  ")
 				if err != nil {
 					log.Fatal(err)
@@ -63,7 +63,7 @@ func WriteData(rw *bufio.ReadWriter) {
 		for {
 			time.Sleep(5 * time.Second)
 			mutex.Lock()
-			bytes, err := json.Marshal(blockchain.BLOCKCHAIN)
+			bytes, err := json.Marshal(&blockchain.BLOCKCHAIN)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -79,7 +79,7 @@ func WriteData(rw *bufio.ReadWriter) {
 	stdReader := bufio.NewReader(os.Stdin)
 
 	for {
-		lastState := blockchain.BLOCKCHAIN
+		lastState := &blockchain.BLOCKCHAIN
 		fmt.Print("> ")
 		sendData, err := stdReader.ReadString('\n')
 		if err != nil {
@@ -90,19 +90,19 @@ func WriteData(rw *bufio.ReadWriter) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		blockchain.BLOCKCHAIN.AddBlock(blockchain.User, amount)
 
+		blockchain.BLOCKCHAIN.AddBlock(blockchain.User, amount)
 		if !blockchain.BLOCKCHAIN.IsValid() {
 			mutex.Lock()
-			blockchain.BLOCKCHAIN = lastState
+			blockchain.BLOCKCHAIN = *lastState
 			mutex.Unlock()
 		}
-		bytes, err := json.Marshal(blockchain.BLOCKCHAIN)
+		bytes, err := json.Marshal(&blockchain.BLOCKCHAIN)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		spew.Dump(blockchain.BLOCKCHAIN)
+		spew.Dump(&blockchain.BLOCKCHAIN)
 
 		mutex.Lock()
 		rw.WriteString(fmt.Sprintf("%s\n", string(bytes)))

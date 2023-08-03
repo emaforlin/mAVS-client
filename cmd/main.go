@@ -17,13 +17,13 @@ import (
 )
 
 func main() {
-	difficulty := flag.Uint("m", 5, "Mining difficulty")
+	flag.UintVar(&blockchain.Difficulty, "m", 5, "Mining difficulty")
 	listenF := flag.Int("l", 0, "wait for incoming connections")
 	target := flag.String("d", "", "target peer to dial")
 	flag.StringVar(&blockchain.User, "u", "default", "peer username")
 	flag.Parse()
 
-	blockchain.BLOCKCHAIN = *blockchain.CreateBlockchain(*difficulty)
+	blockchain.BLOCKCHAIN = blockchain.CreateBlockchain(blockchain.Difficulty)
 
 	golog.SetAllLoggers(golog.LevelInfo)
 
