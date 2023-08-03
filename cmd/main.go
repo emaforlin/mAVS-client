@@ -8,8 +8,8 @@ import (
 	"log"
 
 	"github.com/emaforlin/VoteNGo/pkg/blockchain"
-	"github.com/emaforlin/chat/pkg/handlers"
-	"github.com/emaforlin/chat/pkg/node"
+	"github.com/emaforlin/VoteNGo/pkg/handlers"
+	"github.com/emaforlin/VoteNGo/pkg/node"
 	golog "github.com/ipfs/go-log"
 	peer "github.com/libp2p/go-libp2p/core/peer"
 	pstore "github.com/libp2p/go-libp2p/core/peerstore"
@@ -25,7 +25,7 @@ func main() {
 
 	blockchain.BLOCKCHAIN = *blockchain.CreateBlockchain(*difficulty)
 
-	golog.SetAllLoggers(golog.INFO)
+	golog.SetAllLoggers(golog.LevelInfo)
 
 	if *listenF == 0 {
 		log.Fatal("Please provide a port to bind with -l option")
