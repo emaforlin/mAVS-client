@@ -1,0 +1,3 @@
+# Vote 'N Go
+---
+A blockchain based voting system...
