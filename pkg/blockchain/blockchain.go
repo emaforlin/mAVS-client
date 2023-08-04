@@ -60,7 +60,6 @@ func CreateBlockchain(d uint) *BlockChain {
 		PrevHash:  "0",
 		TimeStamp: time.Now(),
 	}
-	//log.Printf("Starting a blockchain with difficulty %d\n", d)
 
 	return &BlockChain{
 		GenesisBlock: genBlock,

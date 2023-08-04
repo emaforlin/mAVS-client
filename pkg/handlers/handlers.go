@@ -43,7 +43,7 @@ func ReadData(rw *bufio.ReadWriter) {
 				log.Fatal(err)
 			}
 			mutex.Lock()
-			if len(bc.Chain) > len(blockchain.BLOCKCHAIN.Chain) /*&& bc.IsValid()*/ {
+			if len(bc.Chain) > len(blockchain.BLOCKCHAIN.Chain) && bc.IsValid() {
 				*blockchain.BLOCKCHAIN = *bc
 				bytes, err := json.MarshalIndent(blockchain.BLOCKCHAIN, "", "  ")
 				if err != nil {
