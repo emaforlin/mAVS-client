@@ -6,6 +6,9 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/emaforlin/VoteNGo/pkg/handlers"
 	libp2p "github.com/libp2p/go-libp2p"
@@ -45,7 +48,6 @@ func MakeBasicHost(listenPort int) (host.Host, error) {
 }
 
 func StartNode(h host.Host, t string, l int) {
-
 	if t == "" {
 		log.Println("listening for connections")
 
@@ -53,7 +55,12 @@ func StartNode(h host.Host, t string, l int) {
 		// a user-defined protocol name.
 		h.SetStreamHandler("/p2p/1.0.0", handlers.HandleStream)
 
-		select {}
+		//select {}
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+		<-ch
+		fmt.Println("Signal detected. Shutting down.")
+		h.Close()
 
 		// Listener code ends
 	} else {
@@ -89,7 +96,7 @@ func StartNode(h host.Host, t string, l int) {
 		// so LibP2P knows how to contact it
 		h.Peerstore().AddAddr(peerid, targetAddr, pstore.PermanentAddrTTL)
 
-		log.Println("opening stream")
+		log.Println("Opening stream")
 		// make a new stream from host B to host A
 		// it should be handled on host A by the handler we set above because
 		// we use the same /p2p/1.0.0 protocol
@@ -103,6 +110,12 @@ func StartNode(h host.Host, t string, l int) {
 		go handlers.ReadData(rw)
 		go handlers.WriteData(rw)
 
-		select {} // hang forever
+		//select {} // hang forever
+
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+		<-ch
+		fmt.Println("Signal detected. Shutting down.")
+		h.Close()
 	}
 }
