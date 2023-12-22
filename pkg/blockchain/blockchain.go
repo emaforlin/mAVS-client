@@ -11,35 +11,47 @@ import (
 	"time"
 )
 
-var Difficulty uint
-var User string
-var BLOCKCHAIN *BlockChain
-
 type Block struct {
-	Index     uint
-	TimeStamp time.Time
-	Data      map[string]interface{}
-	Hash      string
-	PrevHash  string
-	Pow       int
+	index     uint
+	timeStamp time.Time
+	data      map[string]interface{}
+	hash      string
+	prevHash  string
+	pow       int
 }
 
 type BlockChain struct {
-	GenesisBlock Block
-	Chain        []Block
-	Difficulty   uint
+	genesisBlock Block
+	chain        []Block
+	difficulty   uint
+	Lenght       uint
+}
+
+func CreateBlockchain(d uint) BlockChain {
+	genBlock := Block{
+		index:     0,
+		hash:      "0",
+		prevHash:  "0",
+		timeStamp: time.Now(),
+	}
+
+	return BlockChain{
+		genesisBlock: genBlock,
+		chain:        []Block{genBlock},
+		difficulty:   d,
+	}
 }
 
 func (b *Block) CalculateHash() string {
-	data, err := json.Marshal(b.Data)
+	data, err := json.Marshal(b.data)
 	if err != nil {
 		log.Fatal(err)
 	}
-	ts, err := b.TimeStamp.MarshalText()
+	ts, err := b.timeStamp.MarshalText()
 	if err != nil {
 		log.Fatal(err)
 	}
-	blockData := strconv.Itoa(int(b.Index)) + b.PrevHash + string(data) + string(ts) + strconv.Itoa(b.Pow)
+	blockData := strconv.Itoa(int(b.index)) + b.prevHash + string(data) + string(ts) + strconv.Itoa(b.pow)
 
 	blockHash := sha256.Sum256([]byte(blockData))
 
@@ -47,52 +59,38 @@ func (b *Block) CalculateHash() string {
 }
 
 func (b *Block) Mine(difficulty uint) {
-	for !strings.HasPrefix(b.Hash, strings.Repeat("0", int(difficulty))) {
-		b.Pow++
-		b.Hash = b.CalculateHash()
+	for !strings.HasPrefix(b.hash, strings.Repeat("0", int(difficulty))) {
+		b.pow++
+		b.hash = b.CalculateHash()
 	}
 }
 
-func CreateBlockchain(d uint) *BlockChain {
-	genBlock := Block{
-		Index:     0,
-		Hash:      "0",
-		PrevHash:  "0",
-		TimeStamp: time.Now(),
-	}
-
-	return &BlockChain{
-		GenesisBlock: genBlock,
-		Chain:        []Block{genBlock},
-		Difficulty:   d,
-	}
-}
-
-func (b *BlockChain) AddBlock(author string, amount int) {
-	blockData := map[string]interface{}{
-		"author": author,
-		"amount": amount,
-	}
-
-	lastBlock := &b.Chain[len(b.Chain)-1]
+func (b *BlockChain) AddBlock(data map[string]interface{}) {
+	lastBlock := &b.chain[len(b.chain)-1]
 
 	newBlock := &Block{
-		Index:     lastBlock.Index + 1,
-		Data:      blockData,
-		PrevHash:  lastBlock.Hash,
-		TimeStamp: time.Now(),
+		index:     lastBlock.index + 1,
+		data:      data,
+		prevHash:  lastBlock.hash,
+		timeStamp: time.Now(),
 	}
 
-	newBlock.Mine(b.Difficulty)
-	b.Chain = append(b.Chain, *newBlock)
+	newBlock.Mine(b.difficulty)
+	b.chain = append(b.chain, *newBlock)
+	b.Lenght = uint(len(b.chain))
 }
 
 func (b *BlockChain) IsValid() bool {
-	for i := range b.Chain[1:] {
-		prevBlock := &b.Chain[i]
-		currBlock := &b.Chain[i+1]
+	if b.Lenght != uint(len(b.chain)) ||
+		b.genesisBlock.timeStamp != b.chain[0].timeStamp {
+		return false
+	}
+	for i := range b.chain[1:] {
+		prevBlock := &b.chain[i]
+		currBlock := &b.chain[i+1]
 
-		if currBlock.PrevHash != prevBlock.Hash || currBlock.Hash != currBlock.CalculateHash() {
+		if currBlock.prevHash != prevBlock.hash ||
+			currBlock.hash != currBlock.CalculateHash() {
 			return false
 		}
 	}
