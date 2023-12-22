@@ -10,7 +10,7 @@ A blockchain based voting system...
 
 ### To do list
 
-[] Fix node peaceful disconecting
-[] Improve validations
-[] Add API things
-[] ...
+- [ ] Fix node peaceful disconecting
+- [ ] Improve validations
+- [ ] Add API things
+- [ ] ...
