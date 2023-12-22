@@ -11,10 +11,6 @@ import (
 	"time"
 )
 
-var Difficulty uint
-var User string
-var BLOCKCHAIN *BlockChain
-
 type Block struct {
 	Index     uint
 	TimeStamp time.Time
@@ -28,6 +24,21 @@ type BlockChain struct {
 	GenesisBlock Block
 	Chain        []Block
 	Difficulty   uint
+}
+
+func CreateBlockchain(d uint) BlockChain {
+	genBlock := Block{
+		Index:     0,
+		Hash:      "0",
+		PrevHash:  "0",
+		TimeStamp: time.Now(),
+	}
+
+	return BlockChain{
+		GenesisBlock: genBlock,
+		Chain:        []Block{genBlock},
+		Difficulty:   d,
+	}
 }
 
 func (b *Block) CalculateHash() string {
@@ -50,21 +61,6 @@ func (b *Block) Mine(difficulty uint) {
 	for !strings.HasPrefix(b.Hash, strings.Repeat("0", int(difficulty))) {
 		b.Pow++
 		b.Hash = b.CalculateHash()
-	}
-}
-
-func CreateBlockchain(d uint) *BlockChain {
-	genBlock := Block{
-		Index:     0,
-		Hash:      "0",
-		PrevHash:  "0",
-		TimeStamp: time.Now(),
-	}
-
-	return &BlockChain{
-		GenesisBlock: genBlock,
-		Chain:        []Block{genBlock},
-		Difficulty:   d,
 	}
 }
 

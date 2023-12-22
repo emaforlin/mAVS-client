@@ -17,17 +17,18 @@ import (
 )
 
 var mutex = &sync.Mutex{}
+var BC *blockchain.BlockChain
 
 func HandleStream(s net.Stream) {
 	log.Println("Got a new stream!")
 
 	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
 
-	go ReadData(rw)
-	go WriteData(rw)
+	go ReadData(rw, BC)
+	go WriteData(rw, BC)
 }
 
-func ReadData(rw *bufio.ReadWriter) {
+func ReadData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 	for {
 		str, err := rw.ReadString('\n')
 		if err != nil {
@@ -37,15 +38,15 @@ func ReadData(rw *bufio.ReadWriter) {
 			return
 		}
 		if str != "\n" {
-			var bc = blockchain.CreateBlockchain(blockchain.Difficulty)
-			bc.Difficulty = blockchain.Difficulty
-			if err := json.Unmarshal([]byte(str), &bc); err != nil {
+			extBc := blockchain.BlockChain{}
+			if err := json.Unmarshal([]byte(str), &extBc); err != nil {
 				log.Fatal(err)
 			}
+
 			mutex.Lock()
-			if len(bc.Chain) > len(blockchain.BLOCKCHAIN.Chain) && bc.IsValid() {
-				*blockchain.BLOCKCHAIN = *bc
-				bytes, err := json.MarshalIndent(blockchain.BLOCKCHAIN, "", "  ")
+			if len(extBc.Chain) > len(BC.Chain) && extBc.IsValid() {
+				*BC = extBc
+				bytes, err := json.MarshalIndent(BC, "", "  ")
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -54,17 +55,16 @@ func ReadData(rw *bufio.ReadWriter) {
 				fmt.Printf("\x1b[32m%s\x1b[0m> ", string(bytes))
 			}
 			mutex.Unlock()
-
 		}
 	}
 }
 
-func WriteData(rw *bufio.ReadWriter) {
+func WriteData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 	go func() {
 		for {
 			time.Sleep(5 * time.Second)
 			mutex.Lock()
-			bytes, err := json.Marshal(&blockchain.BLOCKCHAIN)
+			bytes, err := json.Marshal(&BC)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -78,9 +78,9 @@ func WriteData(rw *bufio.ReadWriter) {
 	}()
 
 	stdReader := bufio.NewReader(os.Stdin)
-
+	user := "testing"
 	for {
-		lastState := &blockchain.BLOCKCHAIN
+		lastState := *BC
 		fmt.Print("> ")
 		sendData, err := stdReader.ReadString('\n')
 		if err != nil {
@@ -92,18 +92,18 @@ func WriteData(rw *bufio.ReadWriter) {
 			log.Fatal(err)
 		}
 
-		blockchain.BLOCKCHAIN.AddBlock(blockchain.User, amount)
-		if !blockchain.BLOCKCHAIN.IsValid() {
+		BC.AddBlock(user, amount)
+		if !BC.IsValid() {
 			mutex.Lock()
-			blockchain.BLOCKCHAIN = *lastState
+			BC = &lastState
 			mutex.Unlock()
 		}
-		bytes, err := json.Marshal(&blockchain.BLOCKCHAIN)
+		bytes, err := json.Marshal(&BC)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		spew.Dump(&blockchain.BLOCKCHAIN)
+		spew.Dump(&BC)
 
 		mutex.Lock()
 		rw.WriteString(fmt.Sprintf("%s\n", string(bytes)))
