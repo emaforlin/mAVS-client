@@ -44,7 +44,7 @@ func ReadData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 			}
 
 			mutex.Lock()
-			if len(extBc.Chain) > len(BC.Chain) && extBc.IsValid() {
+			if extBc.Lenght > BC.Lenght && extBc.IsValid() {
 				*BC = extBc
 				bytes, err := json.MarshalIndent(BC, "", "  ")
 				if err != nil {
@@ -78,7 +78,9 @@ func WriteData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 	}()
 
 	stdReader := bufio.NewReader(os.Stdin)
-	user := "testing"
+
+	user := "testing" // THIS HAS NOT TO BE HARCODED
+
 	for {
 		lastState := *BC
 		fmt.Print("> ")
@@ -91,8 +93,11 @@ func WriteData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		BC.AddBlock(user, amount)
+		body := map[string]interface{}{
+			"author": user,
+			"amount": amount,
+		}
+		BC.AddBlock(body)
 		if !BC.IsValid() {
 			mutex.Lock()
 			BC = &lastState
