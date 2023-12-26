@@ -21,9 +21,7 @@ var BC *blockchain.BlockChain
 
 func HandleStream(s net.Stream) {
 	log.Println("Got a new stream!")
-
 	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
-
 	go ReadData(rw, BC)
 	go WriteData(rw, BC)
 }

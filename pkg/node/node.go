@@ -6,6 +6,9 @@ import (
 	"crypto/rand"
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/emaforlin/VoteNGo/pkg/blockchain"
 	"github.com/emaforlin/VoteNGo/pkg/handlers"
@@ -48,6 +51,7 @@ func StartNode(h host.Host, dest string, l int) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// fmt.Println("Peer id: ", &h.ID())
 	blockchain := blockchain.CreateBlockchain(3)
 	handlers.BC = &blockchain
 
@@ -63,9 +67,18 @@ func StartNode(h host.Host, dest string, l int) {
 		// Create a thread to read and write data.
 		go handlers.ReadData(rw, &blockchain)
 		go handlers.WriteData(rw, &blockchain)
-
 	}
-	select {}
+
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	<-ch
+	// shut the node down when signal is received
+	fmt.Println("Received signal, shutting down...")
+
+	if err := h.Close(); err != nil {
+		panic(err)
+	}
+	// select {}
 }
 
 func startPeer(ctx context.Context, h host.Host) {
@@ -86,7 +99,7 @@ func startPeer(ctx context.Context, h host.Host) {
 		log.Println("Was not able to find actual local port.")
 		return
 	}
-	log.Printf("Run '... -d /ip4/127.0.0.1/tcp/%v/p2p/%s' on another console.\n", port, h.ID().Pretty())
+	log.Printf("Run '... -d /ip4/127.0.0.1/tcp/%v/p2p/%s' on another console.\n", port, h.ID().String())
 	log.Println("You can replace 127.0.0.1 with public IP as well.")
 	log.Println("Waiting for incoming connection")
 	log.Println()
@@ -113,7 +126,6 @@ func startPeerAndConnect(ctx context.Context, h host.Host, dest string) (*bufio.
 
 	log.Printf("Multiaddrs: %q.", info.Addrs)
 	h.Peerstore().AddAddr(info.ID, info.Addrs[0], peerstore.PermanentAddrTTL)
-
 	// Start the stream with the destination
 	// Multiaddress of the destination peer is fetched from the peerstore.
 	s, err := h.NewStream(context.Background(), info.ID, "/p2p")
