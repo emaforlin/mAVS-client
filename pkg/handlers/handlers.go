@@ -46,7 +46,6 @@ func ReadData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 			mutex.Lock()
 			// if len(extBc.Chain) > len(BC.Chain) && extBc.IsValid() {
 			if extBc.Lenght > BC.Lenght && extBc.IsValid() {
-
 				*BC = extBc
 				bytes, err := json.MarshalIndent(BC, "", "  ")
 				if err != nil {
