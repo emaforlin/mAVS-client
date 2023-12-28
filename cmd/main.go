@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	//flag.UintVar(&blockchain.Difficulty, "m", 5, "Mining difficulty")
+	//flag.UintVar(&difficulty, "m", 5, "Mining difficulty")
 	listenF := flag.Int("l", 0, "wait for incoming connections")
 	target := flag.String("d", "", "target peer to dial")
 	//flag.StringVar(&blockchain.User, "u", "default", "peer username")

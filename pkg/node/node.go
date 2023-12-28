@@ -74,8 +74,7 @@ func StartNode(h host.Host, dest string, l int) {
 	<-ch
 	// shut the node down when signal is received
 	fmt.Println("Received signal, shutting down...")
-
-	if err := h.Close(); err != nil {
+	if err := h.Network().ClosePeer(h.ID()); err != nil {
 		panic(err)
 	}
 	// select {}

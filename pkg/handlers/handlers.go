@@ -22,16 +22,15 @@ var BC *blockchain.BlockChain
 func HandleStream(s net.Stream) {
 	log.Println("Got a new stream!")
 	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
+
 	go ReadData(rw, BC)
 	go WriteData(rw, BC)
 }
 
 func ReadData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 	for {
-		str, err := rw.ReadString('\n')
-		if err != nil {
-			log.Fatal(err)
-		}
+		str, _ := rw.ReadString('\n')
+
 		if str == "" {
 			return
 		}
@@ -47,6 +46,7 @@ func ReadData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 				*BC = extBc
 				bytes, err := json.MarshalIndent(BC, "", "  ")
 				if err != nil {
+
 					log.Fatal(err)
 				}
 				// Green console color: 	\x1b[32m
