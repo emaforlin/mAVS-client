@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -21,7 +22,76 @@ import (
 	"github.com/multiformats/go-multiaddr"
 )
 
-func MakeBasicHost(listenPort int) (host.Host, error) {
+type Node struct {
+	id     string
+	host   *host.Host
+	logger *log.Logger
+	bc     blockchain.BlockChain
+}
+
+func New(l *log.Logger) Node {
+	return Node{
+		logger: l,
+	}
+}
+
+func (n *Node) Start(listenPort uint16, difficulty uint, connectTo ...string) error {
+	if len(connectTo) > 1 {
+		return errors.New("connectTo must contain a single string")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	h, err := makeBasicHost(listenPort)
+	if err != nil {
+		// error handle
+		n.logger.Fatal(err)
+		return err
+	}
+
+	n.host = &h
+	n.id = h.ID().ShortString()
+	n.bc = blockchain.CreateBlockchain(difficulty)
+	handlers.SetBlockchain(&n.bc)
+
+	var port string
+
+	for _, la := range h.Network().ListenAddresses() {
+		if p, err := la.ValueForProtocol(multiaddr.P_TCP); err == nil {
+			port = p
+			break
+		}
+	}
+
+	if connectTo[0] == "" {
+		startPeer(ctx, *n.host)
+		log.Printf("Run '... -d /ip4/127.0.0.1/tcp/%v/p2p/%s -m %s' on another console.\n", port, h.ID().String(), fmt.Sprintf("%d", n.bc.Difficulty))
+		log.Println("You can replace 127.0.0.1 with public IP as well.")
+	} else {
+		rw, err := startPeerAndConnect(ctx, *n.host, connectTo[0])
+		if err != nil {
+			n.logger.Fatal(err)
+			return err
+		}
+		go handlers.ReadData(rw, &n.bc)
+		go handlers.WriteData(rw, &n.bc)
+	}
+	// waits for signal
+	ch := make(chan os.Signal, 1)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	<-ch
+
+	// shutdown the node when signal received
+	fmt.Println("Received signal, shutting down...")
+	if err := h.Network().ClosePeer(h.ID()); err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
+func makeBasicHost(listenPort uint16) (host.Host, error) {
 	r := rand.Reader
 	priv, _, err := crypto.GenerateKeyPairWithReader(crypto.RSA, 2048, r)
 	if err != nil {
@@ -47,61 +117,46 @@ func MakeBasicHost(listenPort int) (host.Host, error) {
 	return basicHost, nil
 }
 
-func StartNode(h host.Host, dest string, l int) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+/*
+	func StartNode(h host.Host, dest string, listenPort int, difficulty int) {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
 
-	// fmt.Println("Peer id: ", &h.ID())
-	blockchain := blockchain.CreateBlockchain(3)
-	handlers.BC = &blockchain
+		blockchain := blockchain.CreateBlockchain(uint(difficulty))
+		handlers.BC = &blockchain
 
-	if dest == "" {
-		startPeer(ctx, h)
-		// Listener code ends
-	} else {
-		rw, err := startPeerAndConnect(ctx, h, dest)
-		if err != nil {
-			log.Fatal(err)
+		if dest == "" {
+			startPeer(ctx, h)
+			// Listener code ends
+
+		} else {
+			rw, err := startPeerAndConnect(ctx, h, dest)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			// Create a "thread" to read and write data.
+			go handlers.ReadData(rw, &blockchain)
+			go handlers.WriteData(rw, &blockchain)
 		}
 
-		// Create a thread to read and write data.
-		go handlers.ReadData(rw, &blockchain)
-		go handlers.WriteData(rw, &blockchain)
-	}
+		// waits for signal
+		ch := make(chan os.Signal, 1)
+		signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+		<-ch
 
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	<-ch
-	// shut the node down when signal is received
-	fmt.Println("Received signal, shutting down...")
-	if err := h.Network().ClosePeer(h.ID()); err != nil {
-		panic(err)
+		// shut the node down when signal is received
+		fmt.Println("Received signal, shutting down...")
+		if err := h.Network().ClosePeer(h.ID()); err != nil {
+			panic(err)
+		}
 	}
-	// select {}
-}
+*/
 
 func startPeer(ctx context.Context, h host.Host) {
 	// Set a stream handler on host A. /p2p/1.0.0 is an example of
 	// a user-defined protocol name.
 	h.SetStreamHandler("/p2p", handlers.HandleStream)
-
-	var port string
-
-	for _, la := range h.Network().ListenAddresses() {
-		if p, err := la.ValueForProtocol(multiaddr.P_TCP); err == nil {
-			port = p
-			break
-		}
-	}
-
-	if port == "" {
-		log.Println("Was not able to find actual local port.")
-		return
-	}
-	log.Printf("Run '... -d /ip4/127.0.0.1/tcp/%v/p2p/%s' on another console.\n", port, h.ID().String())
-	log.Println("You can replace 127.0.0.1 with public IP as well.")
-	log.Println("Waiting for incoming connection")
-	log.Println()
 }
 
 func startPeerAndConnect(ctx context.Context, h host.Host, dest string) (*bufio.ReadWriter, error) {
