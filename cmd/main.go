@@ -1,25 +1,26 @@
 package main
 
 import (
-	"flag"
 	"log"
 
+	"github.com/emaforlin/VoteNGo/pkg/cli"
 	"github.com/emaforlin/VoteNGo/pkg/node"
+
 	golog "github.com/ipfs/go-log"
 )
 
 func main() {
-	//flag.UintVar(&difficulty, "m", 5, "Mining difficulty")
-	listenF := flag.Int("l", 0, "wait for incoming connections")
-	target := flag.String("d", "", "target peer to dial")
-	//flag.StringVar(&blockchain.User, "u", "default", "peer username")
-	flag.Parse()
+	l := log.Default()
+	config, err := cli.ParseFlags()
+	if err != nil {
+		l.Fatal(err)
+	}
+
 	golog.SetAllLoggers(golog.LevelInfo)
 
-	host, err := node.MakeBasicHost(*listenF)
-	if err != nil {
-		log.Fatal(err)
+	n := node.New(l)
+	if err := n.Start(uint16(config.ListenPort), config.Difficulty, config.TargetAddr); err != nil {
+		l.Fatal(err)
 	}
-	node.StartNode(host, *target, *listenF)
 
 }
