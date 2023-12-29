@@ -17,14 +17,18 @@ import (
 )
 
 var mutex = &sync.Mutex{}
-var BC *blockchain.BlockChain
+var bc *blockchain.BlockChain
+
+func SetBlockchain(b *blockchain.BlockChain) {
+	bc = b
+}
 
 func HandleStream(s net.Stream) {
 	log.Println("Got a new stream!")
 	rw := bufio.NewReadWriter(bufio.NewReader(s), bufio.NewWriter(s))
 
-	go ReadData(rw, BC)
-	go WriteData(rw, BC)
+	go ReadData(rw, bc)
+	go WriteData(rw, bc)
 }
 
 func ReadData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
