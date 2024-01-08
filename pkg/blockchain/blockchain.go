@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog"
 )
 
 type Block struct {
@@ -21,14 +23,14 @@ type Block struct {
 }
 
 type BlockChain struct {
-	logger       *log.Logger
+	logger       zerolog.Logger
 	GenesisBlock Block
 	Chain        []Block
 	Difficulty   uint
 	Lenght       uint
 }
 
-func CreateBlockchain(l *log.Logger, d uint) BlockChain {
+func CreateBlockchain(l zerolog.Logger, d uint) BlockChain {
 	firstHash := strings.Repeat("0", int(d))
 	genBlock := Block{
 		Index:     0,
