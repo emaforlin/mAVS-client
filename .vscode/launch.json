@@ -9,8 +9,11 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "args": [],
-            "program": "${workspaceFolder}/cmd/main.go"
+            "program": "${workspaceFolder}/cmd/main.go",
+            "args": [
+                "-listen",
+                "/ip4/127.0.0.1/tcp/6666"
+            ],
         }
     ]
 }

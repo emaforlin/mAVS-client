@@ -21,21 +21,24 @@ type Block struct {
 }
 
 type BlockChain struct {
+	logger       *log.Logger
 	GenesisBlock Block
 	Chain        []Block
 	Difficulty   uint
 	Lenght       uint
 }
 
-func CreateBlockchain(d uint) BlockChain {
+func CreateBlockchain(l *log.Logger, d uint) BlockChain {
+	firstHash := strings.Repeat("0", int(d))
 	genBlock := Block{
 		Index:     0,
-		Hash:      "0",
+		Hash:      firstHash,
 		PrevHash:  "0",
 		TimeStamp: time.Now(),
 	}
 
 	return BlockChain{
+		logger:       l,
 		GenesisBlock: genBlock,
 		Chain:        []Block{genBlock},
 		Difficulty:   d,
