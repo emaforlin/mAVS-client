@@ -12,9 +12,9 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/emaforlin/VoteNGo/pkg/blockchain"
-	"github.com/emaforlin/VoteNGo/pkg/handlers"
+	"github.com/emaforlin/mAVS/pkg/blockchain"
 	"github.com/emaforlin/mAVS/pkg/cli"
+	"github.com/emaforlin/mAVS/pkg/handlers"
 	libp2p "github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	crypto "github.com/libp2p/go-libp2p/core/crypto"
@@ -26,25 +26,28 @@ import (
 	"github.com/multiformats/go-multiaddr"
 )
 
+var NodeLogger zerolog.Logger = zerolog.New(os.Stdout).With().Timestamp().Str("component", "node").Logger()
+
 type Node struct {
 	ctx    context.Context
 	host   host.Host
 	logger zerolog.Logger
-	bc     *blockchain.BlockChain
+	bc     *blockchain.Blockchain
 }
 
 func New(c context.Context) Node {
+	NodeLogger.Debug().Msg("Creating a new Node")
 	return Node{
 		ctx:    c,
-		logger: zerolog.New(os.Stdout).With().Timestamp().Logger(),
+		logger: NodeLogger,
 	}
 }
 
 var args cli.Config
 
 func (n *Node) Start(listenPort uint16, difficulty uint) error {
+	n.logger.Info().Msg("Starting node...")
 	args = cli.GetArgs()
-
 	h, err := makeBasicHost()
 	if err != nil {
 		// error handle
@@ -57,7 +60,7 @@ func (n *Node) Start(listenPort uint16, difficulty uint) error {
 	n.logger.Info().Msg(fmt.Sprint("Host creted. We are: ", n.host.ID()))
 	n.logger.Info().Msg(fmt.Sprint(n.host.Addrs()))
 
-	n.bc = blockchain.CreateBlockchain(difficulty)
+	n.bc = blockchain.CreateBlockchain(n.logger.With().Str("component", "blockchain").Logger(), difficulty)
 
 	handlers.SetBlockchain(n.bc)
 	n.host.SetStreamHandler(protocol.ID(args.ProtocolID), handlers.HandleStream)

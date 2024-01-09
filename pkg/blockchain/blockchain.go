@@ -22,7 +22,7 @@ type Block struct {
 	Pow       int
 }
 
-type BlockChain struct {
+type Blockchain struct {
 	logger       zerolog.Logger
 	GenesisBlock Block
 	Chain        []Block
@@ -30,7 +30,7 @@ type BlockChain struct {
 	Lenght       uint
 }
 
-func CreateBlockchain(l zerolog.Logger, d uint) BlockChain {
+func CreateBlockchain(l zerolog.Logger, d uint) *Blockchain {
 	firstHash := strings.Repeat("0", int(d))
 	genBlock := Block{
 		Index:     0,
@@ -39,7 +39,9 @@ func CreateBlockchain(l zerolog.Logger, d uint) BlockChain {
 		TimeStamp: time.Now(),
 	}
 
-	return BlockChain{
+	l.Debug().Msg("Creating blockchain")
+
+	return &Blockchain{
 		logger:       l,
 		GenesisBlock: genBlock,
 		Chain:        []Block{genBlock},
@@ -70,7 +72,7 @@ func (b *Block) Mine(difficulty uint) {
 	}
 }
 
-func (b *BlockChain) AddBlock(body map[string]interface{}) {
+func (b *Blockchain) AddBlock(body map[string]interface{}) {
 	lastBlock := &b.Chain[len(b.Chain)-1]
 
 	newBlock := &Block{
@@ -83,9 +85,11 @@ func (b *BlockChain) AddBlock(body map[string]interface{}) {
 	newBlock.Mine(b.Difficulty)
 	b.Chain = append(b.Chain, *newBlock)
 	b.Lenght = uint(len(b.Chain))
+
+	b.logger.Info().Msg(fmt.Sprintf("Block added %s", b.Chain[len(b.Chain)-1].Hash))
 }
 
-func (b *BlockChain) IsValid() bool {
+func (b *Blockchain) IsValid() bool {
 	for i := range b.Chain[1:] {
 		prevBlock := &b.Chain[i]
 		currBlock := &b.Chain[i+1]
