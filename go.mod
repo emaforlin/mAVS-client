@@ -4,7 +4,6 @@ go 1.20
 
 require (
 	github.com/davecgh/go-spew v1.1.1
-	github.com/emaforlin/VoteNGo v0.0.0-20231229141649-ec4ae8714ef6
 	github.com/libp2p/go-libp2p v0.30.0
 	github.com/libp2p/go-libp2p-kad-dht v0.25.2
 	github.com/multiformats/go-multiaddr v0.11.0

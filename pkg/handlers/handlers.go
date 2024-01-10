@@ -12,14 +12,14 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/emaforlin/VoteNGo/pkg/blockchain"
+	"github.com/emaforlin/mAVS/pkg/blockchain"
 	net "github.com/libp2p/go-libp2p/core/network"
 )
 
 var mutex = &sync.Mutex{}
-var bc *blockchain.BlockChain
+var bc *blockchain.Blockchain
 
-func SetBlockchain(b *blockchain.BlockChain) {
+func SetBlockchain(b *blockchain.Blockchain) {
 	bc = b
 }
 
@@ -31,7 +31,7 @@ func HandleStream(s net.Stream) {
 	go WriteData(rw, bc)
 }
 
-func ReadData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
+func ReadData(rw *bufio.ReadWriter, BC *blockchain.Blockchain) {
 	for {
 		str, _ := rw.ReadString('\n')
 
@@ -39,13 +39,12 @@ func ReadData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 			return
 		}
 		if str != "\n" {
-			extBc := blockchain.BlockChain{}
+			extBc := blockchain.Blockchain{}
 			if err := json.Unmarshal([]byte(str), &extBc); err != nil {
 				log.Fatal(err)
 			}
 
 			mutex.Lock()
-			// if len(extBc.Chain) > len(BC.Chain) && extBc.IsValid() {
 			if extBc.Lenght > BC.Lenght && extBc.IsValid() {
 				*BC = extBc
 				bytes, err := json.MarshalIndent(BC, "", "  ")
@@ -62,10 +61,10 @@ func ReadData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
 	}
 }
 
-func WriteData(rw *bufio.ReadWriter, BC *blockchain.BlockChain) {
+func WriteData(rw *bufio.ReadWriter, BC *blockchain.Blockchain) {
 	go func() {
 		for {
-			time.Sleep(5 * time.Second)
+			time.Sleep(1 * time.Second)
 			mutex.Lock()
 			bytes, err := json.Marshal(&BC)
 			if err != nil {
