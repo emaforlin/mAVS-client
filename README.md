@@ -13,7 +13,7 @@ The project still under early development phase. Please wait for more details.
 ### To do list
 
 - [x] Fix node peaceful disconecting: Now if a node disconnects, the others stay alive
-- [ ] Peer discovering
+- [x] Peer discovering
 - [ ] Improve validations
 - [ ] Add API things
 - [ ] Refresh all the code

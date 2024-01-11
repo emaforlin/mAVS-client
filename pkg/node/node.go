@@ -69,6 +69,7 @@ func (n *Node) Start(listenPort uint16, difficulty uint) error {
 	if err != nil {
 		panic(err)
 	}
+
 	// Bootstrap the DHT. In the default configuration, this spawns a Background
 	// thread that will refresh the peer table every five minutes.
 	n.logger.Debug().Msg("Bootstrapping the DHT")
