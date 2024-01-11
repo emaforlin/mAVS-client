@@ -82,13 +82,18 @@ func (n *Node) Start(listenPort uint16, difficulty uint) error {
 	var wg sync.WaitGroup
 	for _, peerAddr := range args.BootstrapPeers {
 		peerinfo, _ := peer.AddrInfoFromP2pAddr(peerAddr)
+
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			if err := n.host.Connect(n.ctx, *peerinfo); err != nil {
+			var p peer.AddrInfo
+			if peerinfo != nil {
+				p = *peerinfo
+			}
+			if err := n.host.Connect(n.ctx, p); err != nil {
 				n.logger.Fatal().AnErr("error connecting to peer", err)
 			} else {
-				n.logger.Info().Msg(fmt.Sprint("connection established with bootstrap node ", *peerinfo))
+				n.logger.Info().Msg(fmt.Sprint("connection established with bootstrap node ", p))
 			}
 		}()
 	}
