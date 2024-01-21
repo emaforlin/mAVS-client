@@ -58,7 +58,8 @@ func ParseFlags() (Config, error) {
 
 	flag.Parse()
 
-	config.ProtocolID = "/mavs/0.1.0"
+	config.ProtocolID = "/mavs/0.1.1"
+
 	if len(config.BootstrapPeers) == 0 {
 		config.BootstrapPeers = dht.DefaultBootstrapPeers
 	}

@@ -12,9 +12,9 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/emaforlin/mAVS/pkg/blockchain"
-	"github.com/emaforlin/mAVS/pkg/cli"
-	"github.com/emaforlin/mAVS/pkg/handlers"
+	"github.com/emaforlin/mAVS/internal/app/blockchain"
+	"github.com/emaforlin/mAVS/internal/component/cli"
+	"github.com/emaforlin/mAVS/internal/component/handlers"
 	libp2p "github.com/libp2p/go-libp2p"
 	dht "github.com/libp2p/go-libp2p-kad-dht"
 	crypto "github.com/libp2p/go-libp2p/core/crypto"
@@ -47,7 +47,9 @@ var args cli.Config
 
 func (n *Node) Start(listenPort uint16, difficulty uint) error {
 	n.logger.Info().Msg("Starting node...")
-	args = cli.GetArgs()
+
+	args = cli.GetArgs() // retrieve args
+
 	h, err := makeBasicHost()
 	if err != nil {
 		// error handle
@@ -64,7 +66,7 @@ func (n *Node) Start(listenPort uint16, difficulty uint) error {
 
 	handlers.SetBlockchain(n.bc)
 	n.host.SetStreamHandler(protocol.ID(args.ProtocolID), handlers.HandleStream)
-	// ctx := context.Background()
+
 	kademliaDHT, err := dht.New(n.ctx, n.host)
 	if err != nil {
 		panic(err)

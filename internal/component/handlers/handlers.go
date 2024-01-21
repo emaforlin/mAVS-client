@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/emaforlin/mAVS/pkg/blockchain"
+	"github.com/emaforlin/mAVS/internal/app/blockchain"
 	net "github.com/libp2p/go-libp2p/core/network"
 )
 
@@ -45,7 +45,7 @@ func ReadData(rw *bufio.ReadWriter, BC *blockchain.Blockchain) {
 			}
 
 			mutex.Lock()
-			if extBc.Lenght > BC.Lenght && extBc.IsValid() {
+			if extBc.Lenght() > BC.Lenght() && extBc.IsValid() {
 				*BC = extBc
 				bytes, err := json.MarshalIndent(BC, "", "  ")
 				if err != nil {
@@ -94,15 +94,18 @@ func WriteData(rw *bufio.ReadWriter, BC *blockchain.Blockchain) {
 			log.Fatal(err)
 		}
 
-		BC.AddBlock(map[string]interface{}{
+		b := blockchain.CreateBlock(map[string]interface{}{
 			"user":   user,
 			"amount": amount,
 		})
+
+		BC.AddBlock(b)
 		if !BC.IsValid() {
 			mutex.Lock()
 			BC = &lastState
 			mutex.Unlock()
 		}
+
 		bytes, err := json.Marshal(&BC)
 		if err != nil {
 			log.Fatal(err)

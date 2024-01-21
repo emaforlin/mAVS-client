@@ -4,8 +4,8 @@ import (
 	"context"
 	"os"
 
-	"github.com/emaforlin/mAVS/pkg/cli"
-	"github.com/emaforlin/mAVS/pkg/node"
+	"github.com/emaforlin/mAVS/internal/app/node"
+	"github.com/emaforlin/mAVS/internal/component/cli"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
