@@ -8,8 +8,8 @@ A blockchain based voting system.
 
 ### To do list
 
-- [x] -- Fix node peaceful disconecting: Now if a node disconnects, the others stay alive --
-- [ ] -- Improve validations --
-- [ ] -- Add API things --
-- [ ] -- Refresh all the code --
-- [ ] -- Add error handling --
+~~ - [x] Fix node peaceful disconecting: Now if a node disconnects, the others stay alive ~~
+~~ - [ ] Improve validations ~~
+~~ - [ ] Add API things ~~
+~~ - [ ] Refresh all the code ~~
+~~ - [ ] Add error handling ~~
